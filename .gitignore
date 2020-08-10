@@ -1,0 +1,7 @@
+.vs
+*.err
+*.log
+*.wrn
+objchk*
+objfre*
+redist_*

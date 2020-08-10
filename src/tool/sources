@@ -1,0 +1,20 @@
+TARGETNAME=PortSniffer-Tool
+TARGETTYPE=PROGRAM
+
+_NT_TARGET_VERSION=$(_NT_TARGET_VERSION_WINXP)
+MSC_WARNING_LEVEL=/W4 /WX
+
+INCLUDES=$(KMDF_INC_PATH)\$(KMDF_VER_PATH)
+
+UMTYPE=console
+UMBASE=0x4000000
+UMENTRY=wmain
+UMLIBS=$(SDK_LIB_PATH)\setupapi.lib
+USE_MSVCRT=1
+
+SOURCES= enum.c \
+         installation.c \
+         monitoring.c \
+         PortSniffer-Tool.c \
+         PortSniffer-Tool.rc \
+         setup.c
