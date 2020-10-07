@@ -27,6 +27,7 @@ _DumpPortCallback(
 
 static int
 _SetNewUpperFilters(
+    __in PCWSTR pwszPortName,
     __in HDEVINFO hDevInfo,
     __in PSP_DEVINFO_DATA DeviceInfoData
     )
@@ -49,6 +50,7 @@ _SetNewUpperFilters(
         return 1;
     }
 
+    printf("The PortSniffer Driver has been successfully attached to %S.\n", pwszPortName);
     return 0;
 }
 
@@ -71,7 +73,7 @@ _SetUpperFilters(
     if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
     {
         // No upper filters exist for this device yet.
-        return _SetNewUpperFilters(hDevInfo, DeviceInfoData);
+        return _SetNewUpperFilters(pwszPortName, hDevInfo, DeviceInfoData);
     }
 
     // Reserve additional space for adding our service name.
