@@ -80,6 +80,8 @@ _DetachFromAllPorts(void)
     hPortSniffer = OpenPortSniffer();
     if (hPortSniffer == INVALID_HANDLE_VALUE)
     {
+        // Our driver is not running, so it's not attached to any ports.
+        bReturnValue = TRUE;
         goto Cleanup;
     }
 
