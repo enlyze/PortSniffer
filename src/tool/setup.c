@@ -492,16 +492,27 @@ HandleVersionParameter(void)
         goto Cleanup;
     }
 
-    // Compare with our tool version and print the results.
+    // Print driver and tool versions.
     printf("PortSniffer Driver Version %u.%u\n", response.MajorVersion, response.MinorVersion);
+    printf("PortSniffer Tool Version %u.%u\n", PORTSNIFFER_MAJOR_VERSION, PORTSNIFFER_MINOR_VERSION);
+    printf("\n");
 
-    if (response.MajorVersion == PORTSNIFFER_MAJOR_VERSION && response.MinorVersion == PORTSNIFFER_MINOR_VERSION)
+    // Compare them.
+    if (response.MajorVersion == PORTSNIFFER_MAJOR_VERSION)
     {
-        printf("Driver Version equals Tool Version.\n");
+        if (response.MinorVersion == PORTSNIFFER_MINOR_VERSION)
+        {
+            printf("Setup is COMPATIBLE: The full version numbers match.\n");
+        }
+        else
+        {
+            printf("Setup is COMPATIBLE: The major version numbers match.\n");
+        }
     }
     else
     {
-        printf("Driver Version does not equal Tool Version!\n");
+        printf("Setup is INCOMPATIBLE: The major version numbers differ!\n");
+        printf("Please install the PortSniffer Driver that comes with this tool.\n");
     }
 
     iReturnValue = 0;

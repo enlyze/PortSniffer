@@ -7,7 +7,8 @@
 
 #pragma once
 
-// Make sure to change at least the minor version with every incompatible change!
+// We use Semantic Versioning (https://semver.org) without a patch version here.
+// Increase the major version on API-incompatible changes, increase the minor version on API-compatible changes.
 #define PORTSNIFFER_MAJOR_VERSION       1
 #define PORTSNIFFER_MINOR_VERSION       0
 
@@ -17,18 +18,3 @@
 
 #define PORTSNIFFER_REVISION_STRING     "unknown revision"
 #define PORTSNIFFER_VERSION_COMBINED    STRINGIFY(PORTSNIFFER_MAJOR_VERSION) "." STRINGIFY(PORTSNIFFER_MINOR_VERSION) " (" PORTSNIFFER_REVISION_STRING ")"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
