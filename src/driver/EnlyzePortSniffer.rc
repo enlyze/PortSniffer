@@ -5,6 +5,8 @@
 // SPDX-License-Identifier: MIT
 //
 
+#pragma code_page(65001) // UTF-8
+
 #include <Windows.h>
 #include <ntverp.h>
 #include "../version.h"
@@ -26,7 +28,7 @@ BEGIN
             VALUE "FileDescription", "PortSniffer Driver"
             VALUE "FileVersion", PORTSNIFFER_VERSION_COMBINED
             VALUE "InternalName", "EnlyzePortSniffer"
-            VALUE "LegalCopyright", "Copyright � 2020 ENLYZE GmbH"
+            VALUE "LegalCopyright", "Copyright © 2020 ENLYZE GmbH"
             VALUE "OriginalFilename", "EnlyzePortSniffer.sys"
             VALUE "ProductName", "ENLYZE PortSniffer"
             VALUE "ProductVersion", PORTSNIFFER_VERSION_COMBINED
