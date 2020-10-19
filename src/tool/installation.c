@@ -263,7 +263,7 @@ HandleInstallParameter(void)
     {
         printf("A reboot is required to complete the installation of WDF components.\n");
         printf("Please rerun this installation afterwards.\n");
-        iReturnValue = 0;
+        iReturnValue = ERROR_SUCCESS_REBOOT_REQUIRED;
         goto Cleanup;
     }
     else if (installStatus != ERROR_SUCCESS)

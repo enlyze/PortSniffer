@@ -287,6 +287,7 @@ _RestartDevice(
     if (devinstallParams.Flags & DI_NEEDREBOOT)
     {
         printf("A reboot is required for the changes to take effect.\n");
+        return ERROR_PNP_REBOOT_REQUIRED;
     }
 
     return 0;
