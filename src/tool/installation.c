@@ -307,6 +307,8 @@ HandleInstallParameter(void)
             fprintf(stderr, "DeleteService failed, last error is %lu.\n", GetLastError());
             goto Cleanup;
         }
+
+        CloseServiceHandle(hService);
     }
 
     hService = CreateServiceW(hSC,
