@@ -138,7 +138,16 @@ HandleMonitorParameter(
         &cbReturned,
         NULL))
     {
-        fprintf(stderr, "DeviceIoControl failed for PORTSNIFFER_IOCTL_CONTROL_RESET_PORT_MONITORING, last error is %lu.\n", GetLastError());
+        if (GetLastError() == ERROR_FILE_NOT_FOUND)
+        {
+            fprintf(stderr, "The PortSniffer Driver is not attached to %S!\n", pwszPort);
+            fprintf(stderr, "Please run this tool using the /attach option.\n");
+        }
+        else
+        {
+            fprintf(stderr, "DeviceIoControl failed for PORTSNIFFER_IOCTL_CONTROL_RESET_PORT_MONITORING, last error is %lu.\n", GetLastError());
+        }
+
         goto Cleanup;
     }
 
@@ -170,8 +179,9 @@ HandleMonitorParameter(
             }
             else if (GetLastError() == ERROR_FILE_NOT_FOUND)
             {
-                fprintf(stderr, "The PortSniffer Driver is not attached to %S!\n", pwszPort);
+                fprintf(stderr, "The PortSniffer Driver is no longer attached to %S!\n", pwszPort);
                 fprintf(stderr, "Please run this tool using the /attach option.\n");
+                goto Cleanup;
             }
             else
             {
