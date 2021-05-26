@@ -1,6 +1,6 @@
 //
 // PortSniffer - Monitor the traffic of arbitrary serial or parallel ports
-// Copyright 2020 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
+// Copyright 2020-2021 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
 //
 // SPDX-License-Identifier: MIT
 //
@@ -16,8 +16,14 @@
 
 #define CONTROL_DEVICE_NAME_STRING          L"\\Device\\EnlyzePortSniffer"
 #define CONTROL_SYMBOLIC_LINK_NAME_STRING   L"\\DosDevices\\EnlyzePortSniffer"
-#define MAX_LOG_ENTRIES_PER_PORT            32
 #define POOL_TAG                            (ULONG)'nSoP'
+
+// The worst case is a serial port at 115200 baud, which is read via 1-byte requests.
+// 115200 baud makes 14400 bytes/second. Considering that the PortSniffer-Tool polls the
+// driver in 10 millisecond intervals (100 times/second), we need to buffer up to
+// 144 1-byte log entries.
+// Choose 160 (divisible by 32) as the upper limit here to be on the safe side.
+#define MAX_LOG_ENTRIES_PER_PORT            160
 
 
 typedef struct _PORTLOG_ENTRY

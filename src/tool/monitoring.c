@@ -1,6 +1,6 @@
 //
 // PortSniffer - Monitor the traffic of arbitrary serial or parallel ports
-// Copyright 2020 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
+// Copyright 2020-2021 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
 //
 // SPDX-License-Identifier: MIT
 //
@@ -138,7 +138,16 @@ HandleMonitorParameter(
         &cbReturned,
         NULL))
     {
-        fprintf(stderr, "DeviceIoControl failed for PORTSNIFFER_IOCTL_CONTROL_RESET_PORT_MONITORING, last error is %lu.\n", GetLastError());
+        if (GetLastError() == ERROR_FILE_NOT_FOUND)
+        {
+            fprintf(stderr, "The PortSniffer Driver is not attached to %S!\n", pwszPort);
+            fprintf(stderr, "Please run this tool using the /attach option.\n");
+        }
+        else
+        {
+            fprintf(stderr, "DeviceIoControl failed for PORTSNIFFER_IOCTL_CONTROL_RESET_PORT_MONITORING, last error is %lu.\n", GetLastError());
+        }
+
         goto Cleanup;
     }
 
@@ -154,8 +163,6 @@ HandleMonitorParameter(
     // Fetch new port log entries from our driver until we are terminated.
     while (!_bTerminationRequested)
     {
-        Sleep(250);
-
         if (!DeviceIoControl(hPortSniffer,
             (DWORD)PORTSNIFFER_IOCTL_CONTROL_POP_PORTLOG_ENTRY,
             &PopRequest,
@@ -167,12 +174,14 @@ HandleMonitorParameter(
         {
             if (GetLastError() == ERROR_NO_MORE_ITEMS)
             {
+                Sleep(10);
                 continue;
             }
             else if (GetLastError() == ERROR_FILE_NOT_FOUND)
             {
-                fprintf(stderr, "The PortSniffer Driver is not attached to %S!\n", pwszPort);
+                fprintf(stderr, "The PortSniffer Driver is no longer attached to %S!\n", pwszPort);
                 fprintf(stderr, "Please run this tool using the /attach option.\n");
+                goto Cleanup;
             }
             else
             {
