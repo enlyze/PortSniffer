@@ -10,7 +10,7 @@
 // We use Semantic Versioning (https://semver.org) without a patch version here.
 // Increase the major version on API-incompatible changes, increase the minor version on API-compatible changes.
 #define PORTSNIFFER_MAJOR_VERSION       1
-#define PORTSNIFFER_MINOR_VERSION       2
+#define PORTSNIFFER_MINOR_VERSION       3
 
 // The following two lines of macro magic turn arbitrary preprocessor constants into strings.
 #define STRINGIFY_INTERNAL(x)           #x
