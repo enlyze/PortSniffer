@@ -58,7 +58,7 @@ wmain(
 {
     printf("**********************************************************************\n");
     printf("ENLYZE PortSniffer Tool " PORTSNIFFER_VERSION_COMBINED "\n");
-    printf("Copyright 2020 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>\n");
+    printf("Copyright " COPYRIGHT_YEAR_STRING " Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>\n");
     printf("**********************************************************************\n\n");
 
     if (argc == 2 && wcscmp(argv[1], L"/install") == 0)

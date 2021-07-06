@@ -28,7 +28,7 @@ BEGIN
             VALUE "FileDescription", "PortSniffer Driver"
             VALUE "FileVersion", PORTSNIFFER_VERSION_COMBINED
             VALUE "InternalName", "EnlyzePortSniffer"
-            VALUE "LegalCopyright", "Copyright © 2020-2021 Colin Finck, ENLYZE GmbH"
+            VALUE "LegalCopyright", "Copyright © " COPYRIGHT_YEAR_STRING " Colin Finck, ENLYZE GmbH"
             VALUE "OriginalFilename", "EnlyzePortSniffer.sys"
             VALUE "ProductName", "ENLYZE PortSniffer"
             VALUE "ProductVersion", PORTSNIFFER_VERSION_COMBINED
