@@ -56,7 +56,7 @@ typedef struct _READ_WORK_ITEM_CONTEXT
 {
     WDFREQUEST Request;
     PUCHAR ReadBuffer;
-    size_t ReadBufferLength;
+    size_t BytesRead;
     PFILTER_CONTEXT FilterContext;
 }
 READ_WORK_ITEM_CONTEXT, *PREAD_WORK_ITEM_CONTEXT;
