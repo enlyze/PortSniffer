@@ -1,6 +1,6 @@
 //
 // PortSniffer - Monitor the traffic of arbitrary serial or parallel ports
-// Copyright 2020 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
+// Copyright 2020-2021 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
 //
 // SPDX-License-Identifier: MIT
 //
@@ -838,7 +838,7 @@ PortSnifferFilterEvtIoReadCompletionRoutine(
 
     KdPrint(("PortSnifferFilterEvtIoReadCompletionRoutine(%p, %p, %p, %p)\n", Request, Target, Params, Context));
 
-    if (!NT_SUCCESS(Params->IoStatus.Status))
+    if (!NT_SUCCESS(Params->IoStatus.Status) || Params->Parameters.Read.Length == 0)
     {
         WdfRequestComplete(Request, Params->IoStatus.Status);
         return;
@@ -850,7 +850,8 @@ PortSnifferFilterEvtIoReadCompletionRoutine(
     filterContext = (PFILTER_CONTEXT)Context;
     readWorkItemContext = GetReadWorkItemContext(filterContext->ReadWorkItem);
     readWorkItemContext->Request = Request;
-    readWorkItemContext->ReadBuffer = WdfMemoryGetBuffer(Params->Parameters.Read.Buffer, &readWorkItemContext->ReadBufferLength);
+    readWorkItemContext->ReadBuffer = WdfMemoryGetBuffer(Params->Parameters.Read.Buffer, NULL);
+    readWorkItemContext->BytesRead = Params->Parameters.Read.Length;
     readWorkItemContext->FilterContext = filterContext;
 
     WdfWorkItemEnqueue(filterContext->ReadWorkItem);
@@ -874,7 +875,7 @@ PortSnifferFilterEvtIoReadCompletionWorkItem(
     PortSnifferFilterAddPortLogEntry(readWorkItemContext->FilterContext,
         PORTSNIFFER_MONITOR_READ,
         readWorkItemContext->ReadBuffer,
-        readWorkItemContext->ReadBufferLength
+        readWorkItemContext->BytesRead
     );
 
     WdfRequestComplete(readWorkItemContext->Request, STATUS_SUCCESS);
