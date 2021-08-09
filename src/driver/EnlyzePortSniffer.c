@@ -681,7 +681,7 @@ PortSnifferFilterEvtDeviceAdd(
     }
 
     // Register callbacks for read and write requests.
-    WDF_IO_QUEUE_CONFIG_INIT_DEFAULT_QUEUE(&ioQueueConfig, WdfIoQueueDispatchSequential);
+    WDF_IO_QUEUE_CONFIG_INIT_DEFAULT_QUEUE(&ioQueueConfig, WdfIoQueueDispatchParallel);
     ioQueueConfig.EvtIoRead = PortSnifferFilterEvtIoRead;
     ioQueueConfig.EvtIoWrite = PortSnifferFilterEvtIoWrite;
 
