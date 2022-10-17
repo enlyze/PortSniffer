@@ -40,9 +40,25 @@ If somebody wants to do that, this is the recommended approach, as it would also
 There are also no plans to move away from WDK 7.1.0, because the driver shall remain compatible with Windows XP.
 
 ## Driver Signature
-Currently, the published driver binaries are unsigned and therefore only work in Test Mode under 64-bit Windows versions.
-This may change in the future depending on the availability of a suitable code-signing certificate and Microsoft's blessing...  
-32-bit operating systems are not affected by this Windows limitation.
+Currently, the published driver binaries are unsigned and therefore only work when disabling Driver Signature Enforcement under 64-bit Windows versions.
+If you don't do that, ports will fail with a _Windows cannot verify the digital signature ... (Code 52)_ error in Device Manager after attaching the PortSniffer to them.
+
+To temporarily disable Driver Signature Enforcement when booting Windows:
+
+1. Press F8 continuously during boot to let the Advanced Boot Options screen appear.
+   You can also directly boot into it via `shutdown /r /o`.
+
+2. For Windows 7, you just have to choose _Disable Driver Signature Enforcement_ and you can continue booting.  
+   For Windows 8 or 10, click Troubleshoot -> Advanced options -> Startup Settings and press 7 to _Disable driver signature enforcement_.
+
+I'm not aware of any permanent solution to disable Driver Signature Enforcement.
+Enabling the infamous _Test Mode_ in the bootloader is not sufficient -- at least not for a filter driver like the PortSniffer.
+
+Future versions of the PortSniffer binaries may come with a signature.
+However, [Microsoft has recently been changing their driver signing policies](https://www.osr.com/blog/2021/04/08/lost-cause-no-driver-updates-allowed-except-for-win-10/) and I'm currently not aware of a solution that works equally well for all Windows versions down to Windows 7.
+
+Note that 32-bit operating systems are not affected by this Windows limitation.
+They accept unsigned drivers just fine.
 
 ## Contact
 Colin Finck ([c.finck@enlyze.com](mailto:c.finck@enlyze.com))
