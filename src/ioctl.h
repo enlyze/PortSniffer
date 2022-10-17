@@ -1,6 +1,6 @@
 //
 // PortSniffer - Monitor the traffic of arbitrary serial or parallel ports
-// Copyright 2020 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
+// Copyright 2020-2022 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
 //
 // SPDX-License-Identifier: MIT
 //
@@ -70,6 +70,7 @@ PORTSNIFFER_POP_PORTLOG_ENTRY_REQUEST, *PPORTSNIFFER_POP_PORTLOG_ENTRY_REQUEST;
 
 typedef struct _PORTSNIFFER_POP_PORTLOG_ENTRY_RESPONSE
 {
+    LARGE_INTEGER Timestamp;
     USHORT Type;
     USHORT DataLength;
     BYTE Data[ANYSIZE_ARRAY];
