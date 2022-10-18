@@ -1,6 +1,6 @@
 //
 // PortSniffer - Monitor the traffic of arbitrary serial or parallel ports
-// Copyright 2020 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
+// Copyright 2020-2022 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
 //
 // SPDX-License-Identifier: MIT
 //
@@ -8,6 +8,7 @@
 #pragma once
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <Windows.h>
 #include <strsafe.h>
 #include <SetupAPI.h>
@@ -18,7 +19,6 @@
 
 #include <devioctl.h>
 #include <ntddpar.h>
-#include <ntddser.h>
 
 #ifdef _PREFAST_
 // This isn't kernel-mode code, so function stacks larger than 1KB are fine.

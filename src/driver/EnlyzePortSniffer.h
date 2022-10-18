@@ -1,6 +1,6 @@
 //
 // PortSniffer - Monitor the traffic of arbitrary serial or parallel ports
-// Copyright 2020-2021 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
+// Copyright 2020-2022 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
 //
 // SPDX-License-Identifier: MIT
 //
@@ -125,6 +125,16 @@ PortSnifferFilterClearPortLog(
 EVT_WDF_DRIVER_DEVICE_ADD PortSnifferFilterEvtDeviceAdd;
 
 EVT_WDF_DEVICE_CONTEXT_CLEANUP PortSnifferFilterEvtDeviceCleanup;
+
+EVT_WDF_IO_QUEUE_IO_DEVICE_CONTROL PortSnifferFilterEvtIoDeviceControl;
+
+__drv_requiresIRQL(PASSIVE_LEVEL)
+void
+PortSnifferFilterEvtIoDeviceControlInternal(
+    __inout PFILTER_CONTEXT FilterContext,
+    __in WDFREQUEST Request,
+    __in ULONG IoControlCode
+    );
 
 EVT_WDF_IO_QUEUE_IO_READ PortSnifferFilterEvtIoRead;
 
