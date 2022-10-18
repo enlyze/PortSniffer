@@ -1,6 +1,6 @@
 //
 // PortSniffer - Monitor the traffic of arbitrary serial or parallel ports
-// Copyright 2020-2021 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
+// Copyright 2020-2022 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
 //
 // SPDX-License-Identifier: MIT
 //
@@ -62,7 +62,14 @@ _PrintResponse(
     )
 {
     char cType;
+    PFILETIME pFileTimeStamp;
+    SYSTEMTIME SystemTimeStamp;
     USHORT i;
+
+    // Convert the timestamp into a printable format.
+    // The LARGE_INTEGER Timestamp can be casted to a FILETIME (but not necessarily vice-versa!)
+    pFileTimeStamp = (PFILETIME)&pPopResponse->Timestamp;
+    FileTimeToSystemTime(pFileTimeStamp, &SystemTimeStamp);
 
     // Indicate the monitored request via a single character.
     if (pPopResponse->Type == PORTSNIFFER_MONITOR_READ)
@@ -79,8 +86,11 @@ _PrintResponse(
         return FALSE;
     }
 
-    // Print in the format "TYPE | LENGTH | DATA IN HEX".
-    printf("%c | %4u |", cType, pPopResponse->DataLength);
+    // Print in the format "UTC TIMESTAMP | TYPE | LENGTH | DATA".
+    printf("%04u-%02u-%02u %02u:%02u:%02u.%03u | %c | %4u |",
+           SystemTimeStamp.wYear, SystemTimeStamp.wMonth, SystemTimeStamp.wDay,
+           SystemTimeStamp.wHour, SystemTimeStamp.wMinute, SystemTimeStamp.wSecond, SystemTimeStamp.wMilliseconds,
+           cType, pPopResponse->DataLength);
 
     for (i = 0; i < pPopResponse->DataLength; i++)
     {
@@ -159,6 +169,9 @@ HandleMonitorParameter(
         fprintf(stderr, "SetConsoleCtrlHandler failed, last error is %lu.\n", GetLastError());
         goto Cleanup;
     }
+
+    // Print the table header.
+    printf("UTC TIMESTAMP           | T |  LEN | DATA\n");
 
     // Fetch new port log entries from our driver until we are terminated.
     while (!_bTerminationRequested)

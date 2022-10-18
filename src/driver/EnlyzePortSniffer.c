@@ -1,6 +1,6 @@
 //
 // PortSniffer - Monitor the traffic of arbitrary serial or parallel ports
-// Copyright 2020-2021 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
+// Copyright 2020-2022 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
 //
 // SPDX-License-Identifier: MIT
 //
@@ -527,6 +527,7 @@ PortSnifferFilterAddPortLogEntry(
     entry = WdfMemoryGetBuffer(entryMemory, NULL);
     entry->Memory = entryMemory;
     entry->Next = NULL;
+    KeQuerySystemTime(&entry->Response.Timestamp);
     entry->Response.Type = Type;
     entry->Response.DataLength = (USHORT)DataLength;
     RtlCopyMemory(entry->Response.Data, Data, DataLength);
