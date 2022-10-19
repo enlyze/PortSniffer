@@ -17,7 +17,6 @@ ENLYZE PortSniffer has been inspired by the [Sysinternals Portmon](https://docs.
 
 **Disadvantages**
 * Comes with only a simple CLI application instead of a feature-rich GUI.
-* Captures only Read and Write events (whereas Portmon captures several additional port events).
 
 ## How to build
 1. Install the [Windows Driver Kit 7.1.0](https://www.microsoft.com/en-us/download/details.aspx?id=11800).
@@ -33,7 +32,7 @@ All bug reports and pull requests improving the driver and tool quality are very
 The code has been written to follow all known best practices and coding style guidelines for Windows driver development.
 It currently builds with zero compiler and PREfast warnings, and shall continue to do so.
 
-As of now, there are no plans to add a GUI or capture additional events like Portmon does.
+As of now, there are no plans to add a GUI.
 Due to the documented public interface, a GUI could very well be developed as a separate project outside the PortSniffer repository.
 If somebody wants to do that, this is the recommended approach, as it would also free you from the limitations of the WDK 7.1.0 Build Environment.
 
