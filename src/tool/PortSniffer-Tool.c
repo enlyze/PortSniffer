@@ -1,6 +1,6 @@
 //
 // PortSniffer - Monitor the traffic of arbitrary serial or parallel ports
-// Copyright 2020 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
+// Copyright 2020-2022 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
 //
 // SPDX-License-Identifier: MIT
 //
@@ -30,6 +30,7 @@ _PrintUsage()
     printf("                            TYPES may be one or more of:\n");
     printf("                               R - Read requests\n");
     printf("                               W - Write requests\n");
+    printf("                               C - IOCTL_SERIAL_* requests\n");
     printf("\n");
 
     return 1;

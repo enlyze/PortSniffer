@@ -20,6 +20,8 @@
 #pragma alloc_text (PAGE, PortSnifferFilterClearPortLog)
 #pragma alloc_text (PAGE, PortSnifferFilterEvtDeviceAdd)
 #pragma alloc_text (PAGE, PortSnifferFilterEvtDeviceCleanup)
+#pragma alloc_text (PAGE, PortSnifferFilterEvtIoDeviceControl)
+#pragma alloc_text (PAGE, PortSnifferFilterEvtIoDeviceControlInternal)
 #pragma alloc_text (PAGE, PortSnifferFilterEvtIoRead)
 #pragma alloc_text (PAGE, PortSnifferFilterEvtIoReadCompletionWorkItem)
 #pragma alloc_text (PAGE, PortSnifferFilterEvtIoWrite)
@@ -681,10 +683,11 @@ PortSnifferFilterEvtDeviceAdd(
         goto Cleanup;
     }
 
-    // Register callbacks for read and write requests.
+    // Register callbacks for all requests we possibly want to monitor.
     WDF_IO_QUEUE_CONFIG_INIT_DEFAULT_QUEUE(&ioQueueConfig, WdfIoQueueDispatchParallel);
     ioQueueConfig.EvtIoRead = PortSnifferFilterEvtIoRead;
     ioQueueConfig.EvtIoWrite = PortSnifferFilterEvtIoWrite;
+    ioQueueConfig.EvtIoDeviceControl = PortSnifferFilterEvtIoDeviceControl;
 
     // Ensure that all callback routines are run at IRQL == PASSIVE_LEVEL as we are dealing with paged-pool memory there.
     WDF_OBJECT_ATTRIBUTES_INIT(&ioQueueAttributes);
@@ -755,6 +758,104 @@ PortSnifferFilterEvtDeviceCleanup(
     // Delete our filter device from the collection.
     WdfCollectionRemove(FilterDevices, Device);
     WdfWaitLockRelease(FilterDevicesLock);
+}
+
+__drv_functionClass(EVT_WDF_IO_QUEUE_IO_DEVICE_CONTROL)
+__drv_sameIRQL
+__drv_maxIRQL(DISPATCH_LEVEL)
+void
+PortSnifferFilterEvtIoDeviceControl(
+    __in WDFQUEUE Queue,
+    __in WDFREQUEST Request,
+    __in size_t OutputBufferLength,
+    __in size_t InputBufferLength,
+    __in ULONG IoControlCode
+    )
+{
+    WDFDEVICE device;
+    PFILTER_CONTEXT filterContext;
+    WDF_REQUEST_SEND_OPTIONS sendOptions;
+    NTSTATUS status;
+    WDFIOTARGET target;
+
+    UNREFERENCED_PARAMETER(OutputBufferLength);
+    UNREFERENCED_PARAMETER(InputBufferLength);
+
+    PAGED_CODE();
+    KdPrint(("PortSnifferFilterEvtIoDeviceControl(%p, %p, %Iu, %Iu, %lX)\n", Queue, Request, OutputBufferLength, InputBufferLength, IoControlCode));
+
+    device = WdfIoQueueGetDevice(Queue);
+    filterContext = GetFilterContext(device);
+    target = WdfDeviceGetIoTarget(device);
+    WdfRequestFormatRequestUsingCurrentType(Request);
+
+    if (filterContext->MonitorMask & PORTSNIFFER_MONITOR_IOCTL)
+    {
+        // We monitor I/O Device Control requests for this port.
+        PortSnifferFilterEvtIoDeviceControlInternal(filterContext, Request, IoControlCode);
+    }
+
+    WDF_REQUEST_SEND_OPTIONS_INIT(&sendOptions, WDF_REQUEST_SEND_OPTION_SEND_AND_FORGET);
+    if (!WdfRequestSend(Request, target, &sendOptions))
+    {
+        status = WdfRequestGetStatus(Request);
+        KdPrint(("WdfRequestSend failed, status = 0x%08lX\n", status));
+        WdfRequestComplete(Request, status);
+    }
+}
+
+__drv_requiresIRQL(PASSIVE_LEVEL)
+void
+PortSnifferFilterEvtIoDeviceControlInternal(
+    __inout PFILTER_CONTEXT FilterContext,
+    __in WDFREQUEST Request,
+    __in ULONG IoControlCode
+    )
+{
+    PUCHAR inputBuffer;
+    size_t inputBufferLength;
+    PORTSNIFFER_IOCTL_DATA ioctlData;
+    NTSTATUS status;
+
+    PAGED_CODE();
+    KdPrint(("PortSnifferFilterEvtIoDeviceControlInternal(%p, %p, %lX)\n", FilterContext, Request, IoControlCode));
+
+    switch (IoControlCode)
+    {
+        case IOCTL_SERIAL_SET_BAUD_RATE:
+        case IOCTL_SERIAL_SET_HANDFLOW:
+        case IOCTL_SERIAL_SET_LINE_CONTROL:
+        case IOCTL_SERIAL_SET_QUEUE_SIZE:
+        case IOCTL_SERIAL_SET_TIMEOUTS:
+            // These IOCTLs come with an input buffer that contains the interesting information.
+            status = WdfRequestRetrieveInputBuffer(Request, 0, &inputBuffer, &inputBufferLength);
+            if (!NT_SUCCESS(status))
+            {
+                KdPrint(("WdfRequestRetrieveInputBuffer failed, status = 0x%08lX\n", status));
+                return;
+            }
+
+            if (inputBufferLength > sizeof(ioctlData.u))
+            {
+                KdPrint(("inputBuffer is too large to be logged (%Iu bytes)\n", inputBufferLength));
+                return;
+            }
+
+            RtlCopyMemory(&ioctlData.u, inputBuffer, inputBufferLength);
+
+            // Fall-through
+
+        case IOCTL_SERIAL_CLR_DTR:
+        case IOCTL_SERIAL_CLR_RTS:
+        case IOCTL_SERIAL_SET_BREAK_OFF:
+        case IOCTL_SERIAL_SET_BREAK_ON:
+        case IOCTL_SERIAL_SET_DTR:
+        case IOCTL_SERIAL_SET_RTS:
+        case IOCTL_SERIAL_SET_XON:
+        case IOCTL_SERIAL_SET_XOFF:
+            ioctlData.IoControlCode = IoControlCode;
+            PortSnifferFilterAddPortLogEntry(FilterContext, PORTSNIFFER_MONITOR_IOCTL, (PUCHAR)&ioctlData, sizeof(ioctlData));
+    }
 }
 
 __drv_functionClass(EVT_WDF_IO_QUEUE_IO_READ)
@@ -912,7 +1013,7 @@ PortSnifferFilterEvtIoWrite(
 
     if (filterContext->MonitorMask & PORTSNIFFER_MONITOR_WRITE)
     {
-        // We monitor read requests for this port.
+        // We monitor write requests for this port.
         // As an upper filter driver, we can just get everything we need from the write buffer.
         status = WdfRequestRetrieveInputBuffer(Request, 0, &buffer, &length);
         if (!NT_SUCCESS(status))

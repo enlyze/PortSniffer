@@ -7,6 +7,13 @@
 
 #include "PortSniffer-Tool.h"
 
+typedef struct _FLAG_TRANSLATION
+{
+    ULONG FlagBit;
+    const char* pszFlagName;
+}
+FLAG_TRANSLATION;
+
 static BOOL _bTerminationRequested = FALSE;
 
 
@@ -40,6 +47,10 @@ _ParseTypes(
         {
             *pMonitorMask |= PORTSNIFFER_MONITOR_WRITE;
         }
+        else if (*p == L'C')
+        {
+            *pMonitorMask |= PORTSNIFFER_MONITOR_IOCTL;
+        }
         else
         {
             fprintf(stderr, "Invalid character for TYPES: %lc\n", *p);
@@ -56,6 +67,143 @@ _ParseTypes(
     return TRUE;
 }
 
+static void
+_PrintBitmask(
+    __in ULONG Bitmask,
+    __in const FLAG_TRANSLATION* TranslationTable,
+    __in size_t TranslationTableEntries
+    )
+{
+    BOOL bPrintedOne = FALSE;
+    size_t i;
+
+    for (i = 0; i < TranslationTableEntries; i++)
+    {
+        if (Bitmask & TranslationTable[i].FlagBit)
+        {
+            if (bPrintedOne)
+            {
+                printf("|");
+            }
+
+            printf("%s", TranslationTable[i].pszFlagName);
+            bPrintedOne = TRUE;
+        }
+    }
+}
+
+static BOOL
+_PrintIoctlResponse(
+    __in PPORTSNIFFER_IOCTL_DATA pIoctlData
+    )
+{
+    const FLAG_TRANSLATION ControlHandShakeTranslationTable[] = {
+        { SERIAL_DTR_CONTROL, "SERIAL_DTR_CONTROL" },
+        { SERIAL_DTR_HANDSHAKE, "SERIAL_DTR_HANDSHAKE" },
+        { SERIAL_CTS_HANDSHAKE, "SERIAL_CTS_HANDSHAKE"},
+        { SERIAL_DSR_HANDSHAKE, "SERIAL_DSR_HANDSHAKE" },
+        { SERIAL_DCD_HANDSHAKE, "SERIAL_DCD_HANDSHAKE" },
+        { SERIAL_DSR_SENSITIVITY, "SERIAL_DSR_SENSITIVITY" },
+        { SERIAL_ERROR_ABORT, "SERIAL_ERROR_ABORT" }
+    };
+    const FLAG_TRANSLATION FlowReplaceTranslationTable[] = {
+        { SERIAL_AUTO_TRANSMIT, "SERIAL_AUTO_TRANSMIT" },
+        { SERIAL_AUTO_RECEIVE, "SERIAL_AUTO_RECEIVE" },
+        { SERIAL_ERROR_CHAR, "SERIAL_ERROR_CHAR" },
+        { SERIAL_NULL_STRIPPING, "SERIAL_NULL_STRIPPING" },
+        { SERIAL_BREAK_CHAR, "SERIAL_BREAK_CHAR" },
+        { SERIAL_RTS_CONTROL, "SERIAL_RTS_CONTROL" },
+        { SERIAL_RTS_HANDSHAKE, "SERIAL_RTS_HANDSHAKE" },
+        { SERIAL_XOFF_CONTINUE, "SERIAL_XOFF_CONTINUE" }
+    };
+    const char* pszParity[] = { "NO_PARITY", "ODD_PARITY", "EVEN_PARITY", "MARK_PARITY", "SPACE_PARITY" };
+    const char* pszStopBits[] = { "STOP_BIT_1", "STOP_BITS_1_5", "STOP_BITS_2" };
+
+    switch (pIoctlData->IoControlCode)
+    {
+        case IOCTL_SERIAL_CLR_DTR:
+            printf("IOCTL_SERIAL_CLR_DTR");
+            return TRUE;
+
+        case IOCTL_SERIAL_CLR_RTS:
+            printf("IOCTL_SERIAL_CLR_RTS");
+            return TRUE;
+
+        case IOCTL_SERIAL_SET_BAUD_RATE:
+            printf("IOCTL_SERIAL_SET_BAUD_RATE: %lu", pIoctlData->u.SerialBaudRate.BaudRate);
+            return TRUE;
+
+        case IOCTL_SERIAL_SET_BREAK_OFF:
+            printf("IOCTL_SERIAL_SET_BREAK_OFF");
+            return TRUE;
+
+        case IOCTL_SERIAL_SET_BREAK_ON:
+            printf("IOCTL_SERIAL_SET_BREAK_ON");
+            return TRUE;
+
+        case IOCTL_SERIAL_SET_DTR:
+            printf("IOCTL_SERIAL_SET_DTR");
+            return TRUE;
+
+        case IOCTL_SERIAL_SET_HANDFLOW:
+            printf("IOCTL_SERIAL_SET_HANDFLOW: ControlHandShake:");
+            _PrintBitmask(pIoctlData->u.SerialHandflow.ControlHandShake, ControlHandShakeTranslationTable, _countof(ControlHandShakeTranslationTable));
+            printf(", FlowReplace:");
+            _PrintBitmask(pIoctlData->u.SerialHandflow.FlowReplace, FlowReplaceTranslationTable, _countof(FlowReplaceTranslationTable));
+            printf(", XonLimit:%ld, XoffLimit:%ld", pIoctlData->u.SerialHandflow.XonLimit, pIoctlData->u.SerialHandflow.XoffLimit);
+            return TRUE;
+
+        case IOCTL_SERIAL_SET_LINE_CONTROL:
+        {
+            printf("IOCTL_SERIAL_SET_LINE_CONTROL: ");
+
+            if (pIoctlData->u.SerialLineControl.StopBits < _countof(pszStopBits))
+            {
+                printf("StopBits:%s, ", pszStopBits[pIoctlData->u.SerialLineControl.StopBits]);
+            }
+
+            if (pIoctlData->u.SerialLineControl.Parity < _countof(pszParity))
+            {
+                printf("Parity:%s, ", pszParity[pIoctlData->u.SerialLineControl.Parity]);
+            }
+
+            printf("WordLength:%u", pIoctlData->u.SerialLineControl.WordLength);
+            return TRUE;
+        }
+
+        case IOCTL_SERIAL_SET_QUEUE_SIZE:
+            printf("IOCTL_SERIAL_SET_QUEUE_SIZE: InSize:%lu, OutSize:%lu",
+                   pIoctlData->u.SerialQueueSize.InSize,
+                   pIoctlData->u.SerialQueueSize.OutSize);
+            return TRUE;
+
+        case IOCTL_SERIAL_SET_RTS:
+            printf("IOCTL_SERIAL_SET_RTS");
+            return TRUE;
+
+        case IOCTL_SERIAL_SET_TIMEOUTS:
+            printf("IOCTL_SERIAL_SET_TIMEOUTS: ReadIntervalTimeout:%lu, ReadTotalTimeoutMultiplier:%lu, ReadTotalTimeoutConstant:%lu, WriteTotalTimeoutMultiplier:%lu, WriteTotalTimeoutConstant:%lu",
+                   pIoctlData->u.SerialTimeouts.ReadIntervalTimeout,
+                   pIoctlData->u.SerialTimeouts.ReadTotalTimeoutMultiplier,
+                   pIoctlData->u.SerialTimeouts.ReadTotalTimeoutConstant,
+                   pIoctlData->u.SerialTimeouts.WriteTotalTimeoutMultiplier,
+                   pIoctlData->u.SerialTimeouts.WriteTotalTimeoutConstant);
+            return TRUE;
+
+        case IOCTL_SERIAL_SET_XON:
+            printf("IOCTL_SERIAL_SET_XON");
+            return TRUE;
+
+        case IOCTL_SERIAL_SET_XOFF:
+            printf("IOCTL_SERIAL_SET_XOFF");
+            return TRUE;
+
+        default:
+            fprintf(stderr, "Captured an unknown IOCTL code: 0x%08X\n", pIoctlData->IoControlCode);
+            return FALSE;
+    }
+}
+
 static BOOL
 _PrintResponse(
     __in PPORTSNIFFER_POP_PORTLOG_ENTRY_RESPONSE pPopResponse
@@ -63,6 +211,7 @@ _PrintResponse(
 {
     char cType;
     PFILETIME pFileTimeStamp;
+    PPORTSNIFFER_IOCTL_DATA pIoctlData;
     SYSTEMTIME SystemTimeStamp;
     USHORT i;
 
@@ -80,9 +229,13 @@ _PrintResponse(
     {
         cType = 'W';
     }
+    else if (pPopResponse->Type == PORTSNIFFER_MONITOR_IOCTL)
+    {
+        cType = 'C';
+    }
     else
     {
-        fprintf(stderr, "Captured an invalid request type: %X\n", pPopResponse->Type);
+        fprintf(stderr, "Captured an invalid request type: 0x%04X\n", pPopResponse->Type);
         return FALSE;
     }
 
@@ -92,9 +245,24 @@ _PrintResponse(
            SystemTimeStamp.wHour, SystemTimeStamp.wMinute, SystemTimeStamp.wSecond, SystemTimeStamp.wMilliseconds,
            cType, pPopResponse->DataLength);
 
-    for (i = 0; i < pPopResponse->DataLength; i++)
+    if (pPopResponse->Type == PORTSNIFFER_MONITOR_IOCTL)
     {
-        printf(" %02X", pPopResponse->Data[i]);
+        // IOCTLs need specialized printing depending on the IOCTL code.
+        pIoctlData = (PPORTSNIFFER_IOCTL_DATA)pPopResponse->Data;
+        printf(" ");
+
+        if (!_PrintIoctlResponse(pIoctlData))
+        {
+            return FALSE;
+        }
+    }
+    else
+    {
+        // For read and write requests, we just dump the bytes of the buffer.
+        for (i = 0; i < pPopResponse->DataLength; i++)
+        {
+            printf(" %02X", pPopResponse->Data[i]);
+        }
     }
 
     printf("\n");
