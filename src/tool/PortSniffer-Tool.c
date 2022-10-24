@@ -45,7 +45,10 @@ OpenPortSniffer(void)
     if (hPortSniffer == INVALID_HANDLE_VALUE)
     {
         fprintf(stderr, "Could not open \"\\\\.\\EnlyzePortSniffer\", last error is %lu.\n", GetLastError());
-        fprintf(stderr, "Either the PortSniffer Driver is not installed or not attached to any port.\n");
+        fprintf(stderr, "This can have various reasons:\n");
+        fprintf(stderr, "- The PortSniffer Driver is not installed\n");
+        fprintf(stderr, "- The PortSniffer Driver is not attached to any port\n");
+        fprintf(stderr, "- You have not turned off Driver Signature Enforcement at boot\n");
     }
 
     return hPortSniffer;
