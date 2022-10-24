@@ -439,6 +439,9 @@ HandleUninstallParameter(void)
         goto Cleanup;
     }
 
+    CloseServiceHandle(hService);
+    hService = NULL;
+
     // Delete the driver.
     if (!_GetDriverDestinationPath(wszDriverDestinationPath))
     {
