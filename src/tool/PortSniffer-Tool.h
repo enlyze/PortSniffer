@@ -100,3 +100,10 @@ HandleDetachParameter(
 
 int
 HandleVersionParameter(void);
+
+BOOL
+VerifyDriverAndToolVersions(
+    __in HANDLE hPortSniffer,
+    __in BOOL bAlwaysPrintVersions,
+    __out_opt PPORTSNIFFER_GET_VERSION_RESPONSE pResponse
+    );
