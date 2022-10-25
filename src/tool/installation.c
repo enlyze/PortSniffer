@@ -439,15 +439,23 @@ HandleUninstallParameter(void)
         goto Cleanup;
     }
 
-    // Delete the driver.
+    CloseServiceHandle(hService);
+    hService = NULL;
+
+    // Mark the driver file for deletion on next reboot.
+    //
+    // It was possible to delete it right away up to Windows 10, but since then the
+    // driver file is locked in memory as long as the driver is loaded.
+    // Windows neither provides a way to unload a _filter_ driver attached to a
+    // _legacy_ device without rebooting the entire system.
     if (!_GetDriverDestinationPath(wszDriverDestinationPath))
     {
         goto Cleanup;
     }
 
-    if (!DeleteFileW(wszDriverDestinationPath))
+    if (!MoveFileExW(wszDriverDestinationPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT))
     {
-        fprintf(stderr, "DeleteFileW failed, last error is %lu.\n", GetLastError());
+        fprintf(stderr, "MoveFileExW failed, last error is %lu.\n", GetLastError());
         goto Cleanup;
     }
 
@@ -460,6 +468,7 @@ HandleUninstallParameter(void)
     }
 
     printf("The PortSniffer Driver has been uninstalled successfully!\n");
+    printf("A reboot is required to complete the uninstallation.\n");
     iReturnValue = 0;
 
 Cleanup:

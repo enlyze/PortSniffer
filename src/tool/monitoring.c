@@ -306,6 +306,12 @@ HandleMonitorParameter(
         goto Cleanup;
     }
 
+    // Verify that driver and tool are compatible.
+    if (!VerifyDriverAndToolVersions(hPortSniffer, FALSE, NULL))
+    {
+        goto Cleanup;
+    }
+
     // Start monitoring on this port.
     if (!DeviceIoControl(hPortSniffer,
         (DWORD)PORTSNIFFER_IOCTL_CONTROL_RESET_PORT_MONITORING,

@@ -1,6 +1,6 @@
 //
 // PortSniffer - Monitor the traffic of arbitrary serial or parallel ports
-// Copyright 2020 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
+// Copyright 2020-2022 Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>
 //
 // SPDX-License-Identifier: MIT
 //
@@ -467,7 +467,6 @@ HandleDetachParameter(
 int
 HandleVersionParameter(void)
 {
-    DWORD cbReturned;
     HANDLE hPortSniffer = INVALID_HANDLE_VALUE;
     int iReturnValue = 1;
     PORTSNIFFER_GET_VERSION_RESPONSE response;
@@ -479,26 +478,14 @@ HandleVersionParameter(void)
         goto Cleanup;
     }
 
-    // Ask it for its version.
-    if (!DeviceIoControl(hPortSniffer,
-        (DWORD)PORTSNIFFER_IOCTL_CONTROL_GET_VERSION,
-        NULL,
-        0,
-        &response,
-        sizeof(response),
-        &cbReturned,
-        NULL))
+    // Verify version compatibility.
+    if (!VerifyDriverAndToolVersions(hPortSniffer, TRUE, &response))
     {
-        fprintf(stderr, "DeviceIoControl failed for PORTSNIFFER_IOCTL_CONTROL_GET_VERSION, last error is %lu.\n", GetLastError());
         goto Cleanup;
     }
 
-    // Print driver and tool versions.
-    printf("PortSniffer Driver Version %u.%u\n", response.MajorVersion, response.MinorVersion);
-    printf("PortSniffer Tool Version %u.%u\n", PORTSNIFFER_MAJOR_VERSION, PORTSNIFFER_MINOR_VERSION);
-    printf("\n");
-
-    // Compare them.
+    // We have already printed information about any incompatibilities.
+    // This command shall also give information about the level of compatibility.
     if (response.MajorVersion == PORTSNIFFER_MAJOR_VERSION)
     {
         if (response.MinorVersion == PORTSNIFFER_MINOR_VERSION)
@@ -510,11 +497,6 @@ HandleVersionParameter(void)
             printf("Setup is COMPATIBLE: The major version numbers match.\n");
         }
     }
-    else
-    {
-        printf("Setup is INCOMPATIBLE: The major version numbers differ!\n");
-        printf("Please install the PortSniffer Driver that comes with this tool.\n");
-    }
 
     iReturnValue = 0;
 
@@ -525,4 +507,49 @@ Cleanup:
     }
 
     return iReturnValue;
+}
+
+BOOL
+VerifyDriverAndToolVersions(
+    __in HANDLE hPortSniffer,
+    __in BOOL bAlwaysPrintVersions,
+    __out_opt PPORTSNIFFER_GET_VERSION_RESPONSE pResponse
+    )
+{
+    DWORD cbReturned;
+    PORTSNIFFER_GET_VERSION_RESPONSE response;
+
+    if (pResponse == NULL)
+    {
+        pResponse = &response;
+    }
+
+    if (!DeviceIoControl(hPortSniffer,
+        (DWORD)PORTSNIFFER_IOCTL_CONTROL_GET_VERSION,
+        NULL,
+        0,
+        pResponse,
+        sizeof(PORTSNIFFER_GET_VERSION_RESPONSE),
+        &cbReturned,
+        NULL))
+    {
+        fprintf(stderr, "DeviceIoControl failed for PORTSNIFFER_IOCTL_CONTROL_GET_VERSION, last error is %lu.\n", GetLastError());
+        return FALSE;
+    }
+
+    if (bAlwaysPrintVersions || pResponse->MajorVersion != PORTSNIFFER_MAJOR_VERSION)
+    {
+        printf("PortSniffer Driver Version %u.%u\n", pResponse->MajorVersion, pResponse->MinorVersion);
+        printf("PortSniffer Tool Version %u.%u\n", PORTSNIFFER_MAJOR_VERSION, PORTSNIFFER_MINOR_VERSION);
+        printf("\n");
+    }
+
+    if (pResponse->MajorVersion != PORTSNIFFER_MAJOR_VERSION)
+    {
+        printf("Setup is INCOMPATIBLE: The major version numbers differ!\n");
+        printf("Please uninstall the existing driver and install the PortSniffer Driver that comes with this tool.\n");
+        return FALSE;
+    }
+
+    return TRUE;
 }
