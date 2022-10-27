@@ -60,6 +60,7 @@ wmain(
     __in wchar_t* argv[]
     )
 {
+    setbuf(stdout, NULL);
     printf("**********************************************************************\n");
     printf("ENLYZE PortSniffer Tool " PORTSNIFFER_VERSION_COMBINED "\n");
     printf("Copyright " COPYRIGHT_YEAR_STRING " Colin Finck, ENLYZE GmbH <c.finck@enlyze.com>\n");
