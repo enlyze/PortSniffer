@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (without a PATCH version).
 
 
+## [2.1] - 2022-10-27
+- Fixed clean uninstallation and incompatibility to Windows 10 by requiring a reboot after uninstallation (#10)
+- Added verifying driver and tool versions before monitoring (#10)  
+  This prevents surprising and mostly invalid results when an incompatible PortSniffer driver is installed.
+- Added a CI based on GitHub Actions to reproducibly build the driver binaries (#11)
+- Disabled buffering of stdout (#12)  
+  This allows for live monitoring under all circumstances without delays.
+
 ## [2.0] - 2022-10-20
 - Added recording and printing a timestamp with every log entry (#8)
 - Added printing a table header (#8)
